@@ -1,0 +1,9 @@
+.prettierrc
+.prettierignore
+.gitignore
+.eslintignore
+.editorconfig
+dist
+node_modules
+tsconfig.json
+.vscode
