@@ -1,12 +1,12 @@
 version: '3'
 services:
-  frontend:
-    container_name: client
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    ports:
-      - "3000:3000"
-    volumes:
-      - './:/app'
-      - /app/node_modules
+    frontend:
+        container_name: client
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - '3000:3000'
+        volumes:
+            - './:/app'
+            - /app/node_modules
