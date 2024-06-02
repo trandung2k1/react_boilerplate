@@ -51,7 +51,9 @@ module.exports = (env: any, argv: any) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                name: isProduction ? 'static/media/[name].[contenthash:6].[ext]' : '[path][name].[ext]'
+                                name: isProduction
+                                    ? 'static/media/[name].[contenthash:6].[ext]'
+                                    : '[path][name].[ext]'
                             }
                         }
                     ]
@@ -62,7 +64,9 @@ module.exports = (env: any, argv: any) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                name: isProduction ? 'static/fonts/[name].[ext]' : '[path][name].[ext]'
+                                name: isProduction
+                                    ? 'static/fonts/[name].[ext]'
+                                    : '[path][name].[ext]'
                             }
                         }
                     ]
@@ -75,8 +79,9 @@ module.exports = (env: any, argv: any) => {
             publicPath: '/'
         },
         devServer: {
-            hot: true,
+            // hot: true,
             port: 3000,
+            host: '0.0.0.0',
             historyApiFallback: true,
             static: {
                 directory: path.resolve(__dirname, 'public', 'index.html'),
