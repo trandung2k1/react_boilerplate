@@ -9,13 +9,21 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const Dotenv = require('dotenv-webpack')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+const TerserPlugin = require('terser-webpack-plugin')
 const webpack = require('webpack')
 /** @type {(env: any, arg: {mode: string}) => import('webpack').Configuration} **/
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 module.exports = (env: any, argv: any) => {
     const isProduction = argv.mode === 'production'
     const isAnalyze = Boolean(env?.analyze)
     /** @type {import('webpack').Configuration} **/
     const config = {
+        stats: {
+            colors: true,
+            modules: true,
+            reasons: true,
+            errorDetails: false
+        },
         optimization: {},
         resolve: {
             extensions: ['.tsx', '.ts', '.jsx', '.js'],
@@ -26,10 +34,28 @@ module.exports = (env: any, argv: any) => {
         entry: ['./src/index.tsx'],
         module: {
             rules: [
+                // {
+                //     test: /\.tsx?$/,
+                //     exclude: /node_modules/,
+                //     use: ['babel-loader']
+                // },
                 {
                     test: /\.tsx?$/,
                     exclude: /node_modules/,
-                    use: ['babel-loader']
+                    use: [
+                        {
+                            loader: 'babel-loader',
+                            options: {
+                                presets: [['@babel/preset-env', { targets: 'defaults' }]]
+                            }
+                        },
+                        {
+                            loader: 'ts-loader',
+                            options: {
+                                transpileOnly: true
+                            }
+                        }
+                    ]
                 },
                 {
                     test: /\.(s[ac]ss|css)$/,
@@ -51,9 +77,7 @@ module.exports = (env: any, argv: any) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                name: isProduction
-                                    ? 'static/media/[name].[contenthash:6].[ext]'
-                                    : '[path][name].[ext]'
+                                name: isProduction ? 'static/media/[name].[contenthash:6].[ext]' : '[path][name].[ext]'
                             }
                         }
                     ]
@@ -64,9 +88,7 @@ module.exports = (env: any, argv: any) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                name: isProduction
-                                    ? 'static/fonts/[name].[ext]'
-                                    : '[path][name].[ext]'
+                                name: isProduction ? 'static/fonts/[name].[ext]' : '[path][name].[ext]'
                             }
                         }
                     ]
@@ -76,12 +98,16 @@ module.exports = (env: any, argv: any) => {
         output: {
             filename: 'static/js/main.[contenthash:6].js',
             path: path.resolve(__dirname, 'dist'),
-            publicPath: '/'
+            publicPath: '/',
+            clean: true
         },
+        externalsPresets: { node: true },
         devServer: {
-            // hot: true,
+            hot: true,
             port: 3000,
-            host: '0.0.0.0',
+            // host: '0.0.0.0',
+            compress: true,
+            open: true,
             historyApiFallback: true,
             static: {
                 directory: path.resolve(__dirname, 'public', 'index.html'),
@@ -119,20 +145,34 @@ module.exports = (env: any, argv: any) => {
         config.plugins = [
             ...config.plugins,
             new webpack.ProgressPlugin(),
-
             new CompressionPlugin({
                 test: /\.(css|js)$/,
                 algorithm: 'brotliCompress'
             }),
             new CleanWebpackPlugin()
         ]
+
         if (isAnalyze) {
             config.plugins = [...config.plugins, new BundleAnalyzerPlugin()]
         }
         config.optimization = {
+            moduleIds: 'deterministic',
+            runtimeChunk: 'single',
+            minimize: true,
+            removeAvailableModules: true,
+            splitChunks: {
+                cacheGroups: {
+                    vendor: {
+                        test: /[\\/]node_modules[\\/]/,
+                        name: 'vendors',
+                        chunks: 'all'
+                    }
+                }
+            },
             minimizer: [
                 `...`,
-                new CssMinimizerPlugin() // minify css
+                new CssMinimizerPlugin(), // minify css
+                new TerserPlugin({ parallel: true })
             ]
         }
     }
